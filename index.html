@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>AgentAPP – Ваш платёжный агент</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Шрифт -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Подключаем CSS -->
+  <link rel="stylesheet" href="src/styles/style.css">
+  <!-- Chart.js (для статистики) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js"></script><!-- Шапка -->
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <img src="src/images/logo.png" alt="AgentAPP Logo">
+      </div>
+
+      <!-- Гамбургер (моб. версия) -->
+      <div class="hamburger" id="hamburgerBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <!-- Навигация (динамически заполняется) -->
+      <nav class="nav" id="topNav"></nav>
+
+      <!-- Блок кнопок для неавторизованных -->
+      <div class="auth-buttons" id="authButtons">
+        <button id="registerBtn" class="button button-outline">Зарегистрироваться</button>
+        <button id="openLoginBtn" class="button">Войти</button>
+      </div>
+    </div>
+
+    <!-- Мобильное меню -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button id="mobileRegisterBtn" class="button button-outline">Зарегистрироваться</button>
+      <button id="mobileLoginBtn" class="button">Войти</button>
+    </div>
+  </header>
+
+  <!-- Hero (Landing Page) -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>AgentAPP – Ваш платёжный агент</h1>
+      <p>Осуществляйте международные переводы быстро и безопасно.</p>
+      <div class="hero-buttons">
+        <button id="heroBtn" class="button">Узнать больше</button>
+        <button id="startNowBtn" class="button button-outline">Начать сейчас</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Контент (Landing Page) -->
+  <main id="content">
+    <!-- Бегущая строка партнёров -->
+    <section class="partners-ticker fade-in">
+      <div class="ticker-wrap">
+        <div class="ticker">
+          <a href="https://www.sberbank.ru" target="_blank">
+            <img src="src/images/sberbank.png" alt="Сбербанк">
+          </a>
+          <a href="https://www.vtb.ru" target="_blank">
+            <img src="src/images/vtb.jpg" alt="ВТБ">
+          </a>
+          <a href="https://www.mts.ru" target="_blank">
+            <img src="src/images/mts.png" alt="МТС">
+          </a>
+          <a href="https://www.uralsib.ru" target="_blank">
+            <img src="src/images/uralsib.png" alt="Уралсиб">
+          </a>
+          <a href="https://www.rosbank.ru" target="_blank">
+            <img src="src/images/rosbank.png" alt="Росбанк">
+          </a>
+          <a href="https://www.morskoybank.ru" target="_blank">
+            <img src="src/images/morskoybank.png" alt="Морской банк">
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Почему выбирают нас -->
+    <section class="features-section fade-in">
+      <h2>Почему выбирают нас</h2>
+      <div class="features-slider">
+        <!-- Пример карточки "Быстрота" -->
+        <div class="feature-card rocket">
+          <img src="src/images/rocket_launch.gif" alt="Rocket Launch GIF" class="rocket-img">
+          <h3>Быстрота</h3>
+          <p>Мгновенные переводы и оперативная обработка.</p>
+        </div>
+
+        <!-- Остальные карточки -->
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Надёжность</h3>
+          <p>Безопасное шифрование и проверенные технологии.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>Низкие комиссии</h3>
+          <p>Прозрачные условия без скрытых платежей.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Международность</h3>
+          <p>Работа с любыми валютами по всему миру.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Отзывы -->
+    <section class="reviews-section fade-in">
+      <h2>Отзывы наших клиентов</h2>
+      <div class="reviews-messages">
+        <div class="message left">
+          <div class="message-bubble">
+            <p>Я очень доволен сервисом AgentAPP! Переводы проходят быстро и безопасно.</p>
+            <span class="message-date">15 марта 2025</span>
+          </div>
+        </div>
+        <div class="message right">
+          <div class="message-bubble">
+            <p>Сервис отлично работает, рекомендую всем!</p>
+            <span class="message-date">16 марта 2025</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section fade-in">
+      <h2>Часто задаваемые вопросы</h2>
+      <div class="accordion">
+        <div class="accordion-item">
+          <div class="accordion-header">Можно ли переводить в выходные?</div>
+          <div class="accordion-content">
+            <p>Да, переводы доступны 24/7, однако зачисление может происходить в первый рабочий день банка-получателя.</p>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header">Что делать, если платёж не прошёл?</div>
+          <div class="accordion-content">
+            <p>Свяжитесь с нашей службой поддержки, и мы проверим статус вашего перевода.</p>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header">Какие валюты поддерживаются?</div>
+          <div class="accordion-content">
+            <p>На данный момент доступны RUB, AED, USD, EUR, CNY, GBP.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- .main-layout (ЛК/Админ) добавляется через JS после входа -->
+  </main>
+
+  <!-- Подвал -->
+  <footer class="footer">
+    <p>&copy; 2025 AgentAPP. Все права защищены.</p>
+  </footer>
+
+  <!-- Модалка логина -->
+  <div id="loginModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="closeLoginModal" class="close">&times;</span>
+      <h2>Войти в аккаунт</h2>
+      <form id="loginFormModal">
+        <label>Email/Логин:</label>
+        <input type="text" id="modalEmail" name="modalEmail" required>
+        <label>Пароль:</label>
+        <input type="password" id="modalPassword" name="modalPassword" required>
+        <button type="submit" class="button">Войти</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модалка регистрации -->
+  <div id="registerModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="closeRegisterModal" class="close">&times;</span>
+      <h2>Регистрация</h2>
+      <form id="registerForm">
+        <div class="form-row">
+          <label>Email/Логин:</label>
+          <input type="text" name="rEmail" required>
+        </div>
+        <div class="form-row">
+          <label>Пароль:</label>
+          <input type="password" name="rPassword" required>
+        </div>
+        <div class="form-row">
+          <label>Название компании:</label>
+          <input type="text" name="companyName" required>
+        </div>
+        <div class="form-row">
+          <label>ИНН:</label>
+          <input type="text" name="inn" required>
+        </div>
+        <div class="form-row">
+          <label>Адрес:</label>
+          <input type="text" name="address" required>
+        </div>
+        <div class="form-row">
+          <label>Банк:</label>
+          <input type="text" name="bankName" required>
+        </div>
+        <div class="form-row">
+          <label>БИК:</label>
+          <input type="text" name="bik" required>
+        </div>
+        <div class="form-row">
+          <label>Счёт:</label>
+          <input type="text" name="accountNumber" required>
+        </div>
+        <button type="submit" class="button">Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модалка предпросмотра (поручения, отчёты, документы) -->
+  <div id="previewModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="closePreviewModal" class="close">&times;</span>
+      <div id="previewContent"></div>
+    </div>
+  </div>
+
+  <!-- Тост-уведомления -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Мини-чат -->
+  <div id="chatWidget" class="chat-widget">
+    <div id="chatHeader" class="chat-header">Чат поддержки</div>
+    <div id="chatBody" class="chat-body" style="display:none;">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input">
+        <input type="text" id="chatMessageInput" placeholder="Введите сообщение...">
+        <button id="sendChatMessage" class="button button-sm">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подключаем главный JS -->
+  <script src="src/scripts/app.js"></script>
+</body>
+</html>
