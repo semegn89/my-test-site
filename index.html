@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>AgentAPP – Ваш платёжный агент</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Шрифт -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Подключаем CSS -->
-  <link rel="stylesheet" href="src/styles/style.css">
-  <!-- Chart.js (для статистики) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Основные стили -->
+  <link rel="stylesheet" href="src/styles/style.css" />
 </head>
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js"></script><!-- Шапка -->
 
+  <!-- Шапка -->
   <header class="header">
     <div class="header-inner">
       <div class="logo">
@@ -29,7 +27,7 @@
         <span></span>
       </div>
 
-      <!-- Навигация (динамически заполняется) -->
+      <!-- Навигация (динамически заполняется через JS) -->
       <nav class="nav" id="topNav"></nav>
 
       <!-- Блок кнопок для неавторизованных -->
@@ -160,7 +158,7 @@
       </div>
     </section>
 
-    <!-- .main-layout (ЛК/Админ) добавляется через JS после входа -->
+    <!-- Здесь будет .main-layout (ЛК/Админ) через app.js -->
   </main>
 
   <!-- Подвал -->
@@ -168,7 +166,7 @@
     <p>&copy; 2025 AgentAPP. Все права защищены.</p>
   </footer>
 
-  <!-- Модалка логина -->
+  <!-- Модалка ЛОГИН -->
   <div id="loginModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span id="closeLoginModal" class="close">&times;</span>
@@ -183,7 +181,7 @@
     </div>
   </div>
 
-  <!-- Модалка регистрации -->
+  <!-- Модалка РЕГИСТРАЦИИ -->
   <div id="registerModal" class="modal" style="display:none;">
     <div class="modal-content">
       <span id="closeRegisterModal" class="close">&times;</span>
@@ -237,7 +235,7 @@
   <!-- Тост-уведомления -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Мини-чат -->
+  <!-- Мини-чат (правый нижний угол) -->
   <div id="chatWidget" class="chat-widget">
     <div id="chatHeader" class="chat-header">Чат поддержки</div>
     <div id="chatBody" class="chat-body" style="display:none;">
@@ -249,7 +247,18 @@
     </div>
   </div>
 
-  <!-- Подключаем главный JS -->
-  <script src="src/scripts/app.js"></script>
+  <!-- Перед закрывающим тегом body подключаем библиотеки (без дублирования) и app.js -->
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF + autoTable + шрифт DejaVuSans -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.25/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/snamoah/jspdf-font-helix@latest/js/DejaVuSans.js"></script>
+
+  <!-- Подключаем ваш главный код, где объявлены все функции -->
+  <script type="module" src="src/scripts/main.js"></script>
+
 </body>
 </html>
