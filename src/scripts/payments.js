@@ -1,9 +1,9 @@
 // payments.js
 import { showToast, generateUNP } from './utils.js';
 
-export function renderPaymentsPage(){
+export function renderPaymentsPage() {
   const details = document.querySelector('.details');
-  const curUser = JSON.parse(localStorage.getItem('currentUser'))||{};
+  const curUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const isAdmin = (curUser.role === 'admin');
 
   details.style.background = 'rgba(255,255,255,1)';
@@ -13,7 +13,7 @@ export function renderPaymentsPage(){
       <button id="createPayBtn" class="button">Создать платеж</button>
       <button id="exportCsvBtn" class="button">Экспорт CSV</button>
 
-      <!-- ФИЛЬТР ПО СТАТУСУ (УЖЕ БЫЛ) -->
+      <!-- ФИЛЬТР ПО СТАТУСУ (уже был) -->
       <select id="statusFilter" class="button">
         <option value="">Все статусы</option>
         <option value="Создан">Создан</option>
@@ -24,10 +24,12 @@ export function renderPaymentsPage(){
         <option value="Возвращен отправителю">Возвращен отправителю</option>
       </select>
 
-      <!-- НОВЫЙ ПОИСК ПО ПОЛУЧАТЕЛЮ / ПОРУЧЕНИЮ -->
-      <input type="text" id="searchInput" class="button" placeholder="Поиск (получатель / поручение)" style="width:220px;">
+      <!-- Поиск по получателю / поручению -->
+      <input type="text" id="searchInput" class="button" 
+             placeholder="Поиск (получатель / поручение)" 
+             style="width:220px;">
 
-      <!-- СОРТИРОВКА (сумма, дата) -->
+      <!-- Сортировка (сумма, дата) -->
       <select id="sortSelect" class="button">
         <option value="">Без сортировки</option>
         <option value="date_desc">Дата (новее → старее)</option>
@@ -87,87 +89,109 @@ export function renderPaymentsPage(){
             <option value="GBP">GBP</option>
           </select>
         </div>
+
+        <!-- Новое поле: За что платеж (Тип) -->
+        <div class="form-row">
+          <label>Тип платежа:</label>
+          <select name="paymentType">
+            <option value="Товар">Товар</option>
+            <option value="Услуга">Услуга</option>
+            <option value="Долг">Долг</option>
+            <option value="Другое">Другое</option>
+          </select>
+        </div>
+
         <div class="form-row">
           <label>Документы:</label>
           <input type="file" name="paymentDocs" multiple>
         </div>
+
         ${
-          isAdmin ? `
-          <div class="form-row">
-            <label>Статус:</label>
-            <select name="status">
-              <option value="Создан">Создан</option>
-              <option value="Принят">Принят</option>
-              <option value="В обработке">В обработке</option>
-              <option value="Запрос документов">Запрос документов</option>
-              <option value="Исполнен">Исполнен</option>
-              <option value="Возвращен отправителю">Возвращен отправителю</option>
-            </select>
-          </div>` : ''
+          isAdmin
+            ? `
+        <div class="form-row">
+          <label>Статус:</label>
+          <select name="status">
+            <option value="Создан">Создан</option>
+            <option value="Принят">Принят</option>
+            <option value="В обработке">В обработке</option>
+            <option value="Запрос документов">Запрос документов</option>
+            <option value="Исполнен">Исполнен</option>
+            <option value="Возвращен отправителю">Возвращен отправителю</option>
+          </select>
+        </div>
+        `
+            : ''
         }
+
         <button type="submit" class="button">Сохранить</button>
         <button type="button" id="cancelEditBtn" class="button button-outline" style="display:none; margin-left:10px;">Отмена</button>
       </form>
     </div>
+
     <div id="paysList" style="margin-top:20px;"></div>
   `;
 
-  // ССЫЛКИ НА ЭЛЕМЕНТЫ
-  const createPayBtn   = details.querySelector('#createPayBtn');
-  const exportCsvBtn   = details.querySelector('#exportCsvBtn');
-  const statusFilter   = details.querySelector('#statusFilter');
-  const searchInput    = details.querySelector('#searchInput');
-  const sortSelect     = details.querySelector('#sortSelect');
-  const payFormDiv     = details.querySelector('#payFormDiv');
-  const payFormTitle   = details.querySelector('#payFormTitle');
-  const payForm        = details.querySelector('#payForm');
-  const cancelEditBtn  = details.querySelector('#cancelEditBtn');
-  const paysList       = details.querySelector('#paysList');
+  // Все ссылки на элементы
+  const createPayBtn  = details.querySelector('#createPayBtn');
+  const exportCsvBtn  = details.querySelector('#exportCsvBtn');
+  const statusFilter  = details.querySelector('#statusFilter');
+  const searchInput   = details.querySelector('#searchInput');
+  const sortSelect    = details.querySelector('#sortSelect');
+  const payFormDiv    = details.querySelector('#payFormDiv');
+  const payFormTitle  = details.querySelector('#payFormTitle');
+  const payForm       = details.querySelector('#payForm');
+  const cancelEditBtn = details.querySelector('#cancelEditBtn');
+  const paysList      = details.querySelector('#paysList');
 
   let editingIndex = null;
 
-  createPayBtn.addEventListener('click', ()=>{
+  // Кнопка "Создать платёж"
+  createPayBtn.addEventListener('click', () => {
     editingIndex = null;
     payForm.reset();
     payFormTitle.textContent = 'Новый платеж';
     cancelEditBtn.style.display = 'none';
     payFormDiv.style.display = 'block';
   });
-  cancelEditBtn.addEventListener('click', ()=>{
+  cancelEditBtn.addEventListener('click', () => {
     payForm.reset();
     payFormDiv.style.display = 'none';
-    editingIndex=null;
+    editingIndex = null;
   });
 
-  // ПЕРЕРИСОВКА ПРИ ИЗМЕНЕНИИ ФИЛЬТРОВ / ПОИСКА / СОРТИРОВКИ
+  // При изменении фильтров / поиска / сортировки
   statusFilter.addEventListener('change', renderPaymentsList);
   searchInput.addEventListener('input', renderPaymentsList);
   sortSelect.addEventListener('change', renderPaymentsList);
 
-  payForm.addEventListener('submit', (e)=>{
+  // Сохранение платежа
+  payForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    let payments = JSON.parse(localStorage.getItem('payments'))||[];
-    let docs     = JSON.parse(localStorage.getItem('documents'))||[];
-    let users    = JSON.parse(localStorage.getItem('users'))||[];
+    let payments = JSON.parse(localStorage.getItem('payments')) || [];
+    let docs     = JSON.parse(localStorage.getItem('documents')) || [];
+    let users    = JSON.parse(localStorage.getItem('users')) || [];
 
-    const fd     = new FormData(payForm);
-    const curUser= JSON.parse(localStorage.getItem('currentUser'))||{};
-    let feePercent=0;
-    if(isAdmin){
-      feePercent=0;
+    const fd      = new FormData(payForm);
+    const curUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    let feePercent= 0;
+
+    if (isAdmin) {
+      feePercent = 0; // или что-то другое, если нужно
     } else {
-      const found=users.find(u=>u.email===curUser.email);
-      feePercent=found?found.feePercent||0:0;
+      const found = users.find(u => u.email === curUser.email);
+      feePercent  = found ? found.feePercent || 0 : 0;
     }
 
-    let payStatus='Создан';
-    if(isAdmin) payStatus=fd.get('status')||'Создан';
+    let payStatus = 'Создан';
+    if (isAdmin) payStatus = fd.get('status') || 'Создан';
 
+    // Собираем объект платежа
     const payObj = {
       id: (editingIndex===null) ? generatePaymentId() : '',
       purpose: fd.get('purpose'),
-      contractInvoice: fd.get('contractInvoice')||'',
-      orderNumber: fd.get('orderNumber')||'',
+      contractInvoice: fd.get('contractInvoice') || '',
+      orderNumber: fd.get('orderNumber') || '',
       swift: fd.get('swift'),
       account: fd.get('account'),
       receiverName: fd.get('receiverName'),
@@ -175,6 +199,9 @@ export function renderPaymentsPage(){
       receiverCountry: fd.get('receiverCountry'),
       amount: parseFloat(fd.get('amount')),
       currency: fd.get('currency'),
+      // Новое поле:
+      paymentType: fd.get('paymentType') || 'Другое',
+
       date: new Date().toLocaleString(),
       status: payStatus,
       docs: [],
@@ -182,28 +209,28 @@ export function renderPaymentsPage(){
       ownerEmail: curUser.email
     };
 
-    // Загрузка файлов (как в вашей логике)
+    // Загрузка файлов (ваша логика)
     const fileList = fd.getAll('paymentDocs');
-    function handleFile(i){
-      if(i>=fileList.length){
+    function handleFile(i) {
+      if (i >= fileList.length) {
         finalize();
         return;
       }
       const file = fileList[i];
-      if(!(file instanceof File)){
+      if (!(file instanceof File)) {
         handleFile(i+1);
         return;
       }
       const reader = new FileReader();
-      reader.onload=(ev)=>{
-        const dataURL=ev.target.result;
-        let docId = Date.now()+'-'+i;
-        let docName=`${payObj.id} от ${payObj.date} — ${file.name}`;
+      reader.onload = (ev) => {
+        const dataURL = ev.target.result;
+        let docId   = Date.now() + '-' + i;
+        let docName = `${payObj.id} от ${payObj.date} — ${file.name}`;
         docs.push({
           id: docId,
           name: docName,
           data: dataURL,
-          linkedPaymentId:(editingIndex===null)? payObj.id : ''
+          linkedPaymentId: (editingIndex===null) ? payObj.id : ''
         });
         payObj.docs.push(docId);
         localStorage.setItem('documents', JSON.stringify(docs));
@@ -213,57 +240,59 @@ export function renderPaymentsPage(){
     }
     handleFile(0);
 
-    function finalize(){
-      let pays = JSON.parse(localStorage.getItem('payments'))||[];
-      if(editingIndex===null){
+    function finalize() {
+      let pays = JSON.parse(localStorage.getItem('payments')) || [];
+      if (editingIndex === null) {
         pays.push(payObj);
-        showToast(`Платёж ${payObj.id} создан!`,'success');
+        showToast(`Платёж ${payObj.id} создан!`, 'success');
       } else {
-        pays.sort((a,b)=> new Date(b.date)- new Date(a.date));
+        // Редактирование
+        pays.sort((a, b)=> new Date(b.date) - new Date(a.date));
         let oldId = pays[editingIndex].id;
         payObj.id = oldId;
         payObj.docs = [...pays[editingIndex].docs, ...payObj.docs];
         payObj.ownerEmail = pays[editingIndex].ownerEmail;
         pays[editingIndex] = payObj;
-        showToast(`Платёж ${oldId} обновлён!`,'success');
+        showToast(`Платёж ${oldId} обновлён!`, 'success');
 
-        // Чиним linkedPaymentId
-        let allDocs=JSON.parse(localStorage.getItem('documents'))||[];
-        for(let d of allDocs){
-          if(d.linkedPaymentId==='' && d.name.includes(payObj.date)){
-            d.linkedPaymentId=oldId;
+        // Исправляем linkedPaymentId в documents
+        let allDocs = JSON.parse(localStorage.getItem('documents')) || [];
+        for (let d of allDocs) {
+          if (d.linkedPaymentId === '' && d.name.includes(payObj.date)) {
+            d.linkedPaymentId = oldId;
           }
         }
         localStorage.setItem('documents', JSON.stringify(allDocs));
       }
       localStorage.setItem('payments', JSON.stringify(pays));
       payForm.reset();
-      payFormDiv.style.display='none';
-      editingIndex=null;
+      payFormDiv.style.display = 'none';
+      editingIndex = null;
       renderPaymentsList();
     }
   });
 
-  exportCsvBtn.addEventListener('click', ()=>{
-    let pays=JSON.parse(localStorage.getItem('payments'))||[];
-    if(!pays.length){
-      showToast('Нет данных для экспорта!','info');
+  // Экспорт CSV
+  exportCsvBtn.addEventListener('click', () => {
+    let pays = JSON.parse(localStorage.getItem('payments')) || [];
+    if (!pays.length) {
+      showToast('Нет данных для экспорта!', 'info');
       return;
     }
-    let csv = "data:text/csv;charset=utf-8,ID,Purpose,Contract,OrderNo,SWIFT,Account,Receiver,Amount,Currency,Status,feePercent,Date\n";
-    pays.forEach(p=>{
-      csv += `${p.id},${p.purpose},${p.contractInvoice},${p.orderNumber},${p.swift},${p.account},${p.receiverName},${p.amount},${p.currency},${p.status},${p.feePercent},${p.date}\n`;
+    let csv = "data:text/csv;charset=utf-8,ID,Purpose,Contract,OrderNo,SWIFT,Account,Receiver,Amount,Currency,Status,feePercent,Date,paymentType\n";
+    pays.forEach(p => {
+      csv += `${p.id},${p.purpose},${p.contractInvoice},${p.orderNumber},${p.swift},${p.account},${p.receiverName},${p.amount},${p.currency},${p.status},${p.feePercent},${p.date},${p.paymentType||''}\n`;
     });
     const uri = encodeURI(csv);
-    const link=document.createElement('a');
+    const link = document.createElement('a');
     link.setAttribute('href', uri);
-    link.setAttribute('download','payments.csv');
+    link.setAttribute('download', 'payments.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   });
 
-  function getStatusColor(st){
+  function getStatusColor(st) {
     switch(st){
       case 'Создан': return 'rgba(255,228,196,0.5)';
       case 'Принят': return 'rgba(144,238,144,0.5)';
@@ -275,23 +304,22 @@ export function renderPaymentsPage(){
     }
   }
 
-  function renderPaymentsList(){
-    let pays = JSON.parse(localStorage.getItem('payments'))||[];
-    const curUser=JSON.parse(localStorage.getItem('currentUser'))||{};
-    if(curUser.role!=='admin'){
-      pays = pays.filter(x => x.ownerEmail===curUser.email);
+  // Отображение списка
+  function renderPaymentsList() {
+    let pays = JSON.parse(localStorage.getItem('payments')) || [];
+    if (curUser.role !== 'admin') {
+      pays = pays.filter(x => x.ownerEmail === curUser.email);
     }
 
     // Фильтр по статусу
     const f = statusFilter.value;
-    if(f){
-      pays = pays.filter(x=> x.status===f);
+    if (f) {
+      pays = pays.filter(x => x.status === f);
     }
 
-    // Поиск
+    // Поиск (получатель / поручение)
     const searchVal = (searchInput.value || '').toLowerCase();
-    if(searchVal){
-      // Проверяем receiverName или orderNumber
+    if (searchVal) {
       pays = pays.filter(p => {
         const rName = (p.receiverName || '').toLowerCase();
         const oNum  = (p.orderNumber  || '').toLowerCase();
@@ -301,35 +329,36 @@ export function renderPaymentsPage(){
 
     // Сортировка
     const sortVal = sortSelect.value;
-    if(sortVal === 'date_desc'){
-      pays.sort((a,b)=> new Date(b.date)- new Date(a.date));
-    } else if(sortVal === 'date_asc'){
-      pays.sort((a,b)=> new Date(a.date)- new Date(b.date));
-    } else if(sortVal === 'amount_desc'){
-      pays.sort((a,b)=> b.amount - a.amount);
-    } else if(sortVal === 'amount_asc'){
-      pays.sort((a,b)=> a.amount - b.amount);
+    if (sortVal === 'date_desc') {
+      pays.sort((a,b) => new Date(b.date) - new Date(a.date));
+    } else if (sortVal === 'date_asc') {
+      pays.sort((a,b) => new Date(a.date) - new Date(b.date));
+    } else if (sortVal === 'amount_desc') {
+      pays.sort((a,b) => b.amount - a.amount);
+    } else if (sortVal === 'amount_asc') {
+      pays.sort((a,b) => a.amount - b.amount);
     } else {
-      // по умолчанию можно сортировать как раньше (дата desc)
-      pays.sort((a,b)=> new Date(b.date)- new Date(a.date));
+      // По умолчанию (дата_desc)
+      pays.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
-    if(!pays.length){
-      paysList.innerHTML='<p>Нет платежей.</p>';
+    if (!pays.length) {
+      paysList.innerHTML = '<p>Нет платежей.</p>';
       return;
     }
 
-    let html='';
-    pays.forEach((p,index)=>{
+    let html = '';
+    pays.forEach((p, index) => {
       html += `
         <div class="payment-bubble" style="background-color:${getStatusColor(p.status)};">
           <strong>${p.id}</strong> | <em>${p.date}</em><br>
           Назначение: ${p.purpose} (${p.amount} ${p.currency})<br>
           Контракт/инвойс: ${p.contractInvoice}<br>
-          <strong>Номер поручения:</strong> ${p.orderNumber||'—'}<br>
+          <strong>Номер поручения:</strong> ${p.orderNumber || '—'}<br>
           Получатель: ${p.receiverName}, ${p.receiverAddress}, ${p.receiverCountry}<br>
           SWIFT: ${p.swift}, Счёт: ${p.account}<br>
           feePercent: ${p.feePercent}%<br>
+          <strong>Тип платежа:</strong> ${p.paymentType || 'Другое'}<br>
           Статус: ${p.status}
           <div style="margin-top:5px;">
             <button class="payEditBtn button button-sm" data-idx="${index}">Редактировать</button>
@@ -339,55 +368,63 @@ export function renderPaymentsPage(){
         </div>
       `;
     });
-    paysList.innerHTML=html;
+    paysList.innerHTML = html;
 
-    paysList.querySelectorAll('.payDelBtn').forEach(btn=>{
-      btn.addEventListener('click',function(){
-        let arr=JSON.parse(localStorage.getItem('payments'))||[];
-        arr.sort((a,b)=> new Date(b.date)- new Date(a.date));
-        const i=+this.getAttribute('data-idx');
+    // Удаление
+    paysList.querySelectorAll('.payDelBtn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        let arr = JSON.parse(localStorage.getItem('payments')) || [];
+        arr.sort((a,b) => new Date(b.date) - new Date(a.date));
+        const i = +this.getAttribute('data-idx');
         arr.splice(i,1);
         localStorage.setItem('payments', JSON.stringify(arr));
         showToast('Платёж удалён!', 'info');
         renderPaymentsList();
       });
     });
-    paysList.querySelectorAll('.payEditBtn').forEach(btn=>{
-      btn.addEventListener('click',function(){
-        let arr=JSON.parse(localStorage.getItem('payments'))||[];
-        arr.sort((a,b)=> new Date(b.date)- new Date(a.date));
-        editingIndex=+this.getAttribute('data-idx');
-        const payObj=arr[editingIndex];
-        payForm.reset();
-        payFormTitle.textContent=`Редактировать ${payObj.id}`;
-        cancelEditBtn.style.display='inline-block';
-        payFormDiv.style.display='block';
 
-        payForm.elements['purpose'].value=payObj.purpose;
-        payForm.elements['contractInvoice'].value=payObj.contractInvoice;
-        payForm.elements['orderNumber'].value=payObj.orderNumber||'';
-        payForm.elements['swift'].value=payObj.swift;
-        payForm.elements['account'].value=payObj.account;
-        payForm.elements['receiverName'].value=payObj.receiverName;
-        payForm.elements['receiverAddress'].value=payObj.receiverAddress;
-        payForm.elements['receiverCountry'].value=payObj.receiverCountry;
-        payForm.elements['amount'].value=payObj.amount;
-        payForm.elements['currency'].value=payObj.currency;
-        if(isAdmin){
-          const sel=payForm.querySelector('select[name="status"]');
-          if(sel) sel.value=payObj.status;
+    // Редактирование
+    paysList.querySelectorAll('.payEditBtn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        let arr = JSON.parse(localStorage.getItem('payments')) || [];
+        arr.sort((a,b) => new Date(b.date) - new Date(a.date));
+        editingIndex = +this.getAttribute('data-idx');
+        const payObj = arr[editingIndex];
+        payForm.reset();
+        payFormTitle.textContent = `Редактировать ${payObj.id}`;
+        cancelEditBtn.style.display = 'inline-block';
+        payFormDiv.style.display   = 'block';
+
+        payForm.elements['purpose'].value         = payObj.purpose;
+        payForm.elements['contractInvoice'].value = payObj.contractInvoice;
+        payForm.elements['orderNumber'].value     = payObj.orderNumber || '';
+        payForm.elements['swift'].value           = payObj.swift;
+        payForm.elements['account'].value         = payObj.account;
+        payForm.elements['receiverName'].value    = payObj.receiverName;
+        payForm.elements['receiverAddress'].value = payObj.receiverAddress;
+        payForm.elements['receiverCountry'].value = payObj.receiverCountry;
+        payForm.elements['amount'].value          = payObj.amount;
+        payForm.elements['currency'].value        = payObj.currency;
+        // загружаем paymentType:
+        payForm.elements['paymentType'].value     = payObj.paymentType || 'Другое';
+
+        if (isAdmin) {
+          const sel = payForm.querySelector('select[name="status"]');
+          if (sel) sel.value = payObj.status;
         }
       });
     });
-    paysList.querySelectorAll('.payDocBtn').forEach(btn=>{
-      btn.addEventListener('click',function(){
-        let arr=JSON.parse(localStorage.getItem('payments'))||[];
-        arr.sort((a,b)=> new Date(b.date)- new Date(a.date));
-        const i=+this.getAttribute('data-idx');
-        const payObj=arr[i];
-        if(payObj.status==='Исполнен'){
+
+    // Поручение / Отчёт PDF
+    paysList.querySelectorAll('.payDocBtn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        let arr = JSON.parse(localStorage.getItem('payments')) || [];
+        arr.sort((a,b) => new Date(b.date) - new Date(a.date));
+        const i = +this.getAttribute('data-idx');
+        const payObj = arr[i];
+        if (payObj.status === 'Исполнен') {
           showPdfAgentReport(payObj);
-        } else if(payObj.status==='Возвращен отправителю'){
+        } else if (payObj.status === 'Возвращен отправителю') {
           showPdfReturnRequest(payObj);
         } else {
           showPdfOrder(payObj);
@@ -397,84 +434,89 @@ export function renderPaymentsPage(){
   }
   renderPaymentsList();
 
-    function generatePaymentId(){
-      // Генерация 6-значного числа
-      const num = Math.floor(Math.random()*1000000); // 0..999999
-      const padded = num.toString().padStart(6,'0'); // "000123" и т.д.
-      return `УНП-${padded}`;
-    }
-
-    async function showPdfAgentReport(payObj){
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF();
-      const totalFee=(payObj.amount*(payObj.feePercent/100)).toFixed(2);
-
-      let users=JSON.parse(localStorage.getItem('users'))||[];
-      let user=users.find(u=>u.email===payObj.ownerEmail);
-      let agrNo=user? user.agreementNo:'';
-      let agrDate=user? user.agreementDate:'';
-
-      doc.setFontSize(12);
-      doc.text(`ОТЧЁТ АГЕНТА об исполнении поручения "${payObj.orderNumber}" (${payObj.id})`,10,20);
-      if(agrNo||agrDate){
-        doc.text(`По договору № ${agrNo} от ${agrDate}`,10,30);
-      }
-      doc.text(`Дата платежа: ${payObj.date}`,10,40);
-
-      let head=[['№','Сумма','Валюта','fee%','Итого']];
-      let body=[[
-        '1',
-        payObj.amount,
-        payObj.currency,
-        `${payObj.feePercent}% => ${totalFee}`,
-        `${(payObj.amount + +totalFee)} ${payObj.currency}`
-      ]];
-      doc.autoTable({ head, body, startY:50 });
-      doc.text('Статус: Исполнен',10, doc.autoTable.previous.finalY+10);
-      doc.text('Подпись агента: __________',10, doc.autoTable.previous.finalY+20);
-
-      doc.save(`Отчет_${payObj.id}.pdf`);
-    }
-    async function showPdfReturnRequest(payObj){
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF();
-      doc.setFontSize(12);
-      doc.text(`Заявление на возврат платежа "${payObj.orderNumber}" (${payObj.id})`,10,20);
-      doc.text(`Сумма: ${payObj.amount} ${payObj.currency}`,10,30);
-      doc.text(`Причина: ...`,10,40);
-      doc.text(`Дата,Подпись`,10,60);
-      doc.save(`Возврат_${payObj.id}.pdf`);
-    }
-    async function showPdfOrder(payObj){
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF();
-      doc.setFontSize(12);
-
-      let users=JSON.parse(localStorage.getItem('users'))||[];
-      let user=users.find(u=>u.email===payObj.ownerEmail);
-      let agrNo=user? user.agreementNo:'';
-      let agrDate=user? user.agreementDate:'';
-      const totalFee=(payObj.amount*(payObj.feePercent/100)).toFixed(2);
-
-      doc.text(`Поручение № ${payObj.orderNumber} (ID: ${payObj.id}) от ${payObj.date}`,10,20);
-      if(agrNo||agrDate){
-        doc.text(`По договору № ${agrNo} от ${agrDate}`,10,30);
-      }
-
-      let head=[['№','Назначение','Сумма','Валюта','fee%','Итого']];
-      let body=[[
-        '1',
-        payObj.purpose,
-        payObj.amount,
-        payObj.currency,
-        `${payObj.feePercent}% => ${totalFee}`,
-        `${(payObj.amount + +totalFee)} ${payObj.currency}`
-      ]];
-      doc.autoTable({ head, body, startY:40 });
-      doc.text(`Получатель: ${payObj.receiverName}, ${payObj.receiverAddress}, ${payObj.receiverCountry}`,10, doc.autoTable.previous.finalY+10);
-      doc.text(`SWIFT: ${payObj.swift}, Счёт: ${payObj.account}`,10, doc.autoTable.previous.finalY+20);
-      doc.text(`Подпись агента: __________`,10, doc.autoTable.previous.finalY+40);
-
-      doc.save(`Поручение_${payObj.id}.pdf`);
-    }
+  // Вспомогательная функция генерации ID (6-значный УНП)
+  function generatePaymentId(){
+    const num = Math.floor(Math.random() * 1000000); // 0..999999
+    const padded = num.toString().padStart(6,'0'); 
+    return `УНП-${padded}`;
   }
+
+  // PDF отчёт (Агент)
+  async function showPdfAgentReport(payObj){
+    const { jsPDF } = window.jspdf;
+    const doc       = new jsPDF();
+    const totalFee  = (payObj.amount * (payObj.feePercent/100)).toFixed(2);
+
+    let users = JSON.parse(localStorage.getItem('users'))||[];
+    let user  = users.find(u => u.email === payObj.ownerEmail);
+    let agrNo   = user ? user.agreementNo   : '';
+    let agrDate = user ? user.agreementDate : '';
+
+    doc.setFontSize(12);
+    doc.text(`ОТЧЁТ АГЕНТА об исполнении поручения "${payObj.orderNumber}" (${payObj.id})`,10,20);
+    if (agrNo || agrDate) {
+      doc.text(`По договору № ${agrNo} от ${agrDate}`,10,30);
+    }
+    doc.text(`Дата платежа: ${payObj.date}`,10,40);
+
+    let head = [['№','Сумма','Валюта','fee%','Итого']];
+    let body = [[
+      '1',
+      payObj.amount,
+      payObj.currency,
+      `${payObj.feePercent}% => ${totalFee}`,
+      `${(payObj.amount + +totalFee)} ${payObj.currency}`
+    ]];
+    doc.autoTable({ head, body, startY:50 });
+    doc.text('Статус: Исполнен',10, doc.autoTable.previous.finalY+10);
+    doc.text('Подпись агента: __________',10, doc.autoTable.previous.finalY+20);
+
+    doc.save(`Отчет_${payObj.id}.pdf`);
+  }
+
+  // PDF возврат
+  async function showPdfReturnRequest(payObj){
+    const { jsPDF } = window.jspdf;
+    const doc       = new jsPDF();
+    doc.setFontSize(12);
+    doc.text(`Заявление на возврат платежа "${payObj.orderNumber}" (${payObj.id})`,10,20);
+    doc.text(`Сумма: ${payObj.amount} ${payObj.currency}`,10,30);
+    doc.text(`Причина: ...`,10,40);
+    doc.text(`Дата,Подпись`,10,60);
+    doc.save(`Возврат_${payObj.id}.pdf`);
+  }
+
+  // Поручение
+  async function showPdfOrder(payObj){
+    const { jsPDF } = window.jspdf;
+    const doc       = new jsPDF();
+    doc.setFontSize(12);
+
+    let users = JSON.parse(localStorage.getItem('users'))||[];
+    let user  = users.find(u => u.email === payObj.ownerEmail);
+    let agrNo   = user ? user.agreementNo   : '';
+    let agrDate = user ? user.agreementDate : '';
+    const totalFee = (payObj.amount * (payObj.feePercent/100)).toFixed(2);
+
+    doc.text(`Поручение № ${payObj.orderNumber} (ID: ${payObj.id}) от ${payObj.date}`,10,20);
+    if (agrNo || agrDate){
+      doc.text(`По договору № ${agrNo} от ${agrDate}`,10,30);
+    }
+
+    let head = [['№','Назначение','Сумма','Валюта','fee%','Итого']];
+    let body = [[
+      '1',
+      payObj.purpose,
+      payObj.amount,
+      payObj.currency,
+      `${payObj.feePercent}% => ${totalFee}`,
+      `${(payObj.amount + +totalFee)} ${payObj.currency}`
+    ]];
+    doc.autoTable({ head, body, startY:40 });
+    doc.text(`Получатель: ${payObj.receiverName}, ${payObj.receiverAddress}, ${payObj.receiverCountry}`,10, doc.autoTable.previous.finalY+10);
+    doc.text(`SWIFT: ${payObj.swift}, Счёт: ${payObj.account}`,10, doc.autoTable.previous.finalY+20);
+    doc.text(`Подпись агента: __________`,10, doc.autoTable.previous.finalY+40);
+
+    doc.save(`Поручение_${payObj.id}.pdf`);
+  }
+}
